@@ -417,8 +417,10 @@ export const getTeacherCourseDetails = (courseCode: string, batchName: string) =
 export const markAttendance = (courseId: number | string, attendanceData: AttendanceRecord[]) =>
     apiPost<any>(`/teacher/course/${courseId}/attendance`, attendanceData);
 
-export const getStudentsByBatch = (courseCode: string, batchName: string) =>
-    apiGet<any[]>(`/teacher/courses/${courseCode}/${batchName}`);
+export const getStudentsByBatch = async (courseCode: string, batchName: string) => {
+    const res = await apiGet<any>(`/teacher/courses/${courseCode}/${batchName}`);
+    return res.students || [];
+};
 
 export const createAnnouncement = (data: AnnouncementData) =>
     apiPost<any>(`/teacher/announcement`, data);

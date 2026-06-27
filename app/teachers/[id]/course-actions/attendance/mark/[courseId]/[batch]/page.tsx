@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getStudentsByBatch, markAttendance, AttendanceRecord } from "@/lib/api";
+import { getStudentsByBatch, markAttendance, AttendanceRecord, getTeacherCourses } from "@/lib/api";
 import { Users, CheckCircle, XCircle, Save, Loader2, Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,9 +40,7 @@ export default function MarkAttendancePage({
                 // 1. We need course code to fetch students
                 // In a real app we might pass this via query params or fetch course details single endpoint
                 // Here we fetch all courses to find the code, mimicking previous server component logic
-                const coursesRes = await fetch(`http://localhost:8080/teacher/${id}/courses`);
-                if (!coursesRes.ok) throw new Error("Failed to fetch course details");
-                const courses = await coursesRes.json();
+                const courses = await getTeacherCourses(id);
                 const course = courses.find((c: any) => c.id == courseId);
 
                 if (!course) throw new Error("Course not found");
