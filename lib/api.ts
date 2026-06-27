@@ -1,7 +1,7 @@
 const isServer = typeof window === "undefined";
 const BASE_URL = isServer
-    ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080")
-    : "/api/proxy";
+    ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api")
+    : "/api";
 
 // --- Types ---
 

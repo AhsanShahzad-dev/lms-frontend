@@ -1,0 +1,164 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  id             Int      @id
+  name           String
+  regNo          String
+  emailAddress   String
+  contactNumber  String
+  guardianNumber String
+  fatherName     String
+  program        String
+  session        String
+  semester       String
+  campus         String
+  className      String
+  nationality    String
+  dob            String
+  profilePic     String
+  designation    String
+  department     String
+  password       String
+}
+
+model Teacher {
+  id             Int      @id
+  name           String
+  regNo          String
+  emailAddress   String
+  contactNumber  String
+  guardianNumber String
+  fatherName     String
+  program        String
+  session        String
+  semester       String
+  campus         String
+  className      String
+  nationality    String
+  dob            String
+  profilePic     String
+  qualification  String
+  specialization String
+  password       String
+  courses        Course[]
+}
+
+model Student {
+  id                Int                @id
+  name              String
+  regNo             String
+  emailAddress      String
+  contactNumber     String
+  guardianNumber    String
+  fatherName        String
+  program           String
+  session           String
+  semester          String
+  campus            String
+  className         String
+  nationality       String
+  dob               String
+  profilePic        String
+  password          String
+  cgpa              Float              @default(0.0)
+  wifiAccount       String
+  office365Email    String
+  office365Pass     String
+  batchName         String
+  batch             Batch              @relation(fields: [batchName], references: [name])
+  courses           Course[]           @relation("StudentCourses")
+  submissions       Submission[]
+  attendanceRecords AttendanceRecord[]
+  marks             Marks[]
+}
+
+model Course {
+  id                Int                @id @default(autoincrement())
+  courseNo          String
+  courseName        String
+  credits           Int
+  teacherId         Int?
+  teacher           Teacher?           @relation(fields: [teacherId], references: [id])
+  students          Student[]          @relation("StudentCourses")
+  announcements     Announcement[]
+  learningResources LearningResource[]
+  assignments       Assignment[]
+  attendanceRecords AttendanceRecord[]
+  marks             Marks[]
+}
+
+model Batch {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  students Student[]
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  message   String
+  timestamp DateTime @default(now())
+}
+
+model LearningResource {
+  id       Int    @id @default(autoincrement())
+  courseId Int
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title    String
+  fileUrl  String
+}
+
+model Assignment {
+  id             Int          @id @default(autoincrement())
+  courseId       Int
+  course         Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  dueDate        DateTime
+  teacherFileUrl String?
+  submissions    Submission[]
+}
+
+model Submission {
+  id           Int        @id @default(autoincrement())
+  studentId    Int
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignmentId Int
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  fileUrl      String
+  submittedAt  DateTime   @default(now())
+
+  @@unique([studentId, assignmentId])
+}
+
+model AttendanceRecord {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  date      DateTime @default(now())
+  present   Boolean
+}
+
+model Marks {
+  id              Int     @id @default(autoincrement())
+  studentId       Int
+  student         Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId        Int
+  course          Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  quizMarks       Float   @default(0.0)
+  assignmentMarks Float   @default(0.0)
+  midsMarks       Float   @default(0.0)
+  finalMarks      Float   @default(0.0)
+
+  @@unique([studentId, courseId])
+}
