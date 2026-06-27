@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createAnnouncement, deleteAnnouncement, Announcement, Course } from "@/lib/api";
 import { Bell, Trash2, Plus, Calendar, AlertCircle, Loader2, Save, X, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
@@ -34,6 +35,13 @@ export default function ManageAnnouncementsContent({ id, courseId, initialCourse
     const [isCreating, setIsCreating] = useState(false);
     const [newMessage, setNewMessage] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const router = useRouter();
+
+    // Sync state when Server Component re-fetches data (e.g. after router.refresh())
+    useEffect(() => {
+        setCourse(initialCourse);
+        setError(initialError);
+    }, [initialCourse, initialError]);
 
     const handleDelete = async (announcementId: number) => {
         if (!confirm("Are you sure you want to delete this announcement?")) return;
@@ -49,12 +57,14 @@ export default function ManageAnnouncementsContent({ id, courseId, initialCourse
 
         try {
             await deleteAnnouncement(announcementId);
-            // Optionally re-fetch to ensure sync
-            // await fetchCourseData(); 
+            setCourse(prev => prev ? {
+                ...prev,
+                announcements: prev.announcements?.filter(a => a.id !== announcementId) || []
+            } : null);
+            router.refresh();
         } catch (err) {
             console.error("Failed to delete", err);
             alert("Failed to delete announcement.");
-            // Revert
             setCourse(previousCourse);
         }
     };
@@ -64,6 +74,7 @@ export default function ManageAnnouncementsContent({ id, courseId, initialCourse
         if (!newMessage.trim() || !courseId) return;
 
         setSubmitting(true);
+        const previousCourse = course;
         try {
             // Optimistic Update (Temporary ID)
             const tempId = Date.now();
@@ -74,7 +85,6 @@ export default function ManageAnnouncementsContent({ id, courseId, initialCourse
                 timestamp: new Date().toISOString()
             };
 
-            const previousCourse = course;
             if (course) {
                 // Prepend new announcement
                 setCourse({
@@ -84,20 +94,30 @@ export default function ManageAnnouncementsContent({ id, courseId, initialCourse
             }
 
 
-            await createAnnouncement({
+            const realAnnouncement = await createAnnouncement({
                 courseId: courseId,
                 message: newMessage
             });
 
-            // In a real app we might fetch here to get the real ID, but for UI smoothness we optimistically added it. 
-            // Ideally we should replace the temp item with the real one. For now this is fine.
+            // Replace the optimistic temp announcement with the real one from the server
+            if (course) {
+                setCourse(prev => prev ? {
+                    ...prev,
+                    announcements: [realAnnouncement, ...(prev.announcements?.filter(a => a.id !== tempId) || [])]
+                } : null);
+            }
 
             setNewMessage("");
             setIsCreating(false);
+            
+            // Refresh the server component to keep data in sync
+            router.refresh();
         } catch (err) {
             console.error(err);
             alert("Failed to post announcement.");
-            // Revert if needed (fetching data again is safer)
+            if (course) {
+                setCourse(previousCourse);
+            }
         } finally {
             setSubmitting(false);
         }
@@ -216,14 +236,19 @@ export default function ManageAnnouncementsContent({ id, courseId, initialCourse
                 initial="hidden"
                 animate="show"
             >
-                {course.announcements && course.announcements.length > 0 ? (
-                    course.announcements.map((announcement) => (
-                        <motion.div
-                            variants={itemVars}
-                            key={announcement.id || Math.random()}
-                            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-orange-200 transition-all group hover:shadow-md"
-                        >
-                            <div className="flex justify-between items-start gap-4">
+                <AnimatePresence mode="popLayout">
+                    {course.announcements && course.announcements.length > 0 ? (
+                        course.announcements.map((announcement) => (
+                            <motion.div
+                                variants={itemVars}
+                                initial="hidden"
+                                animate="show"
+                                exit="hidden"
+                                layout
+                                key={announcement.id || Math.random()}
+                                className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:border-orange-200 transition-all group hover:shadow-md"
+                            >
+                                <div className="flex justify-between items-start gap-4">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-3 text-xs text-gray-400 font-medium uppercase tracking-wide">
                                         <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-md">
@@ -254,6 +279,7 @@ export default function ManageAnnouncementsContent({ id, courseId, initialCourse
                         <p className="mt-1 text-sm text-gray-500">Create your first announcement to notify students.</p>
                     </motion.div>
                 )}
+                </AnimatePresence>
             </motion.div>
         </motion.div>
     );

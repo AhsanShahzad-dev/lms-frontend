@@ -1,30 +1,29 @@
-# University Portal - LMS Frontend
+# Full Stack University Portal LMS
 
-A comprehensive Learning Management System (LMS) frontend built with Next.js 16, TypeScript, and Tailwind CSS. This application serves as a centralized portal for students, teachers, and administrators to manage academic activities, course materials, and university operations.
+A comprehensive, full-stack Learning Management System (LMS) built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and **Prisma ORM** with **SQLite**. This application serves as a centralized, interactive portal for students, teachers, and administrators to manage academic activities, course materials, grading, and university operations.
 
 ## 🚀 Features
 
-### Student Portal
-- **Dashboard**: View personal profile, enrolled courses, and academic progress
-- **Course Management**: Access course materials, assignments, and announcements
-- **Assignment Submission**: Upload and submit assignments with file attachments
-- **Grade Tracking**: Monitor marks, attendance, and CGPA
-- **Profile Management**: Update personal information and view academic records
+### 🎓 Student Portal
+- **Interactive Dashboard**: View personal profile, currently enrolled courses, and holistic academic progress.
+- **Course Management**: Access course materials, lectures, assignments, and read announcements from teachers.
+- **Assignment Submission**: Seamlessly submit external links (e.g. Google Drive documents) for assignments.
+- **Grade & Attendance Tracking**: Monitor quiz/midterm/final marks, session-by-session attendance, and calculated CGPA.
+- **Profile Management**: Update personal information and view secure academic records.
 
-### Teacher Portal
-- **Class Management**: View assigned courses and student rosters
-- **Assignment Creation**: Create and manage assignments with due dates
-- **Attendance Tracking**: Mark and manage student attendance
-- **Grade Management**: Record and update student marks and assessments
-- **Announcements**: Post course-related announcements and updates
-- **Submission Review**: View and evaluate student assignment submissions
+### 👨‍🏫 Teacher Portal
+- **Class Management**: View assigned courses and dynamic student rosters sorted by batches.
+- **Assignment Creation**: Create assignments with due dates and attach reference materials via URL.
+- **Attendance Tracking**: Rapidly mark and manage student attendance by batch.
+- **Grade Management**: Record and update student marks (quizzes, mids, finals) via a centralized interface.
+- **Announcements**: Post course-related announcements and updates which instantly broadcast to enrolled students.
+- **Submission Review**: View and evaluate student assignment submissions efficiently.
 
-### Admin Portal
-- **User Management**: Create and manage student and teacher accounts
-- **Course Administration**: Create courses and manage course assignments
-- **Batch Management**: Organize students into batches and manage enrollments
-- **System Oversight**: Monitor and manage all university operations
-- **Teacher Assignment**: Assign teachers to specific courses and batches
+### 🛡️ Admin Portal
+- **User Management**: Create and manage robust student and teacher accounts, including batch assignment.
+- **Course Administration**: Create courses, assign credits, and map teachers to specific courses.
+- **Batch Management**: Organize students into batches and manage dynamic enrollments.
+- **System Oversight**: Monitor and manage all high-level university operations securely.
 
 ## 🛠 Tech Stack
 
@@ -32,67 +31,20 @@ A comprehensive Learning Management System (LMS) frontend built with Next.js 16,
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript 5
 - **Styling**: Tailwind CSS 4
-- **State Management**: Zustand
-- **Database ORM**: Prisma (with local SQLite `dev.db`)
-- **Forms**: React Hook Form with Zod validation
+- **Database ORM**: Prisma ORM
+- **Database**: SQLite (Zero-config local database `dev.db`)
+- **Forms & Validation**: React Hook Form with Zod validation
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
 
-### Development Tools
-- **Package Manager**: npm
-- **Linting**: ESLint with Next.js configuration
-- **Type Checking**: TypeScript strict mode
-- **Build Tool**: Next.js built-in bundler
-
 ### Authentication & Security
-- **JWT Authentication**: Built-in Edge-compatible `jose` library
-- **Role-Based Access Control**: Student, Teacher, Admin roles
-- **Secure API Communication**: Bearer token authentication
-- **CORS Configuration**: Proper cross-origin setup
-
-## 📁 Project Structure
-
-```
-lms-frontend/
-├── app/                          # Next.js App Router
-│   ├── admin/                   # Admin portal routes
-│   │   ├── [id]/               # Dynamic admin pages
-│   │   └── page.tsx            # Admin login/dashboard
-│   ├── students/               # Student portal routes
-│   │   ├── [id]/               # Dynamic student pages
-│   │   └── page.tsx            # Student login/dashboard
-│   ├── teachers/               # Teacher portal routes
-│   │   ├── [id]/               # Dynamic teacher pages
-│   │   └── page.tsx            # Teacher login/dashboard
-│   ├── api/                    # API routes (proxy)
-│   ├── actions/                # Server actions
-│   ├── layout.tsx              # Root layout
-│   ├── page.tsx                # Home page
-│   └── globals.css             # Global styles
-├── components/                  # Reusable UI components
-│   ├── AdminHeader.tsx         # Admin navigation
-│   ├── AdminSidebar.tsx        # Admin sidebar
-│   ├── TeacherHeader.tsx       # Teacher navigation
-│   ├── TeacherSidebar.tsx      # Teacher sidebar
-│   ├── Sidebar.tsx             # Student sidebar
-│   ├── CourseCard.tsx          # Course display card
-│   ├── FileUpload.tsx          # File upload component
-│   ├── Footer.tsx              # Application footer
-│   └── ...                     # Other UI components
-├── lib/                        # Utility libraries
-│   ├── api.ts                  # API client and types
-│   ├── auth.ts                 # Authentication helpers
-│   └── store.ts                # State management
-├── public/                     # Static assets
-│   ├── logo.webp               # University logo
-│   └── ...                     # Other static files
-├── docs/                       # Documentation
-│   ├── API_ENDPOINTS.md        # API documentation
-│   └── Frontend_Auth_Migration_Guide.md
-└── ...                         # Configuration files
-```
+- **JWT Authentication**: Built-in Edge-compatible `jose` library for Next.js middleware token verification.
+- **Role-Based Access Control (RBAC)**: Secure routing separating `STUDENT`, `TEACHER`, and `ADMIN` roles.
+- **Password Hashing**: `bcryptjs` used for secure password storage.
 
 ## 🚀 Getting Started
+
+Follow these steps to set up the project locally on your machine.
 
 ### Prerequisites
 - Node.js 18+ 

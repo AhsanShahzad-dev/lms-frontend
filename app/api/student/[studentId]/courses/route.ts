@@ -21,7 +21,11 @@ export async function GET(
         courses: {
           include: {
             students: { select: { id: true } },
-            announcements: true,
+            announcements: {
+              orderBy: {
+                timestamp: 'desc'
+              }
+            },
             learningResources: true,
             assignments: {
               include: {
