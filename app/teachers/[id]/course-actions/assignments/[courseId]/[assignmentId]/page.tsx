@@ -9,6 +9,26 @@ export default async function AssignmentSubmissionsPage({
 }) {
     const { id, courseId, assignmentId } = await params;
 
+    // Validate assignmentId is a number
+    if (isNaN(Number(assignmentId))) {
+        return (
+            <div className="p-8 text-center bg-white rounded-xl shadow-sm border border-red-200">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Invalid Assignment ID</h2>
+                <p className="text-gray-500">The assignment ID "{assignmentId}" is not valid.</p>
+                <Link href={`/teachers/${id}/course-actions/assignments/${courseId}`} className="mt-6 inline-block px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                    Go Back to Assignments
+                </Link>
+            </div>
+        );
+    }
+
+    const getValidUrl = (url: string) => {
+        if (!url) return "#";
+        if (url.startsWith("http://") || url.startsWith("https://")) return url;
+        return `https://${url}`;
+    };
+
     // Fetch Data
     // We need course details (for total student list) AND submissions
     let submissions: any[] = [];
@@ -115,8 +135,8 @@ export default async function AssignmentSubmissionsPage({
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             {sub.fileUrl ? (
-                                                <a href={getFileDownloadUrl(sub.fileUrl)} target="_blank" className="text-purple-600 hover:text-purple-800 text-sm font-medium hover:underline inline-flex items-center gap-1">
-                                                    <Download size={14} /> Download
+                                                <a href={getValidUrl(sub.fileUrl)} target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 text-sm font-medium hover:underline inline-flex items-center gap-1">
+                                                    <FileText size={14} /> View URL
                                                 </a>
                                             ) : (
                                                 <span className="text-gray-400 text-sm text-xs italic">No File</span>

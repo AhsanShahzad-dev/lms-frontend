@@ -49,19 +49,18 @@ export default function CourseAssignmentsPage({ params }: { params: Promise<{ id
         );
     };
 
-    const handleFileUpload = async (file: File, assignmentId: number) => {
+    const handleUrlSubmit = async (url: string, assignmentId: number) => {
         try {
             setSubmittingId(assignmentId);
-            const filename = await uploadFile(file);
             await submitAssignment({
                 studentId: id,
                 assignmentId: assignmentId,
-                fileUrl: filename
+                fileUrl: url
             });
 
             setAssignments(prev => prev.map(a =>
                 a.id === assignmentId
-                    ? { ...a, status: "submitted", studentSubmissionFileUrl: filename }
+                    ? { ...a, status: "submitted", studentSubmissionFileUrl: url }
                     : a
             ));
             alert("Assignment submitted successfully!");
@@ -180,12 +179,13 @@ export default function CourseAssignmentsPage({ params }: { params: Promise<{ id
                                                             <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Assignment Material</h5>
                                                             {assignment.teacherFileUrl ? (
                                                                 <a
-                                                                    href={getFileDownloadUrl(assignment.teacherFileUrl)}
+                                                                    href={assignment.teacherFileUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
                                                                     className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-bold transition-colors bg-blue-50 px-4 py-2 rounded-lg border border-blue-100 hover:bg-blue-100"
-                                                                    download
                                                                 >
-                                                                    <Download className="mr-2 h-4 w-4" />
-                                                                    Download Assignment
+                                                                    <FileText className="mr-2 h-4 w-4" />
+                                                                    View Assignment Material
                                                                 </a>
                                                             ) : (
                                                                 <span className="text-sm text-gray-400 italic flex items-center">
@@ -200,12 +200,13 @@ export default function CourseAssignmentsPage({ params }: { params: Promise<{ id
                                                                 <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Your Work</h5>
                                                                 {assignment.studentSubmissionFileUrl ? (
                                                                     <a
-                                                                        href={getFileDownloadUrl(assignment.studentSubmissionFileUrl)}
+                                                                        href={assignment.studentSubmissionFileUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
                                                                         className="inline-flex items-center text-sm text-green-600 hover:text-green-700 font-bold transition-colors bg-green-50 px-4 py-2 rounded-lg border border-green-100 hover:bg-green-100"
-                                                                        download
                                                                     >
                                                                         <CheckCircle className="mr-2 h-4 w-4" />
-                                                                        View Your Submission
+                                                                        View Your Submission URL
                                                                     </a>
                                                                 ) : (
                                                                     <span className="text-sm text-gray-500">File uploaded</span>
@@ -216,20 +217,38 @@ export default function CourseAssignmentsPage({ params }: { params: Promise<{ id
 
                                                     {assignment.status === "pending" && (
                                                         <div>
-                                                            <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Submit Assignment</h5>
+                                                            <h5 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Submit Assignment URL</h5>
                                                             <div className="max-w-md">
                                                                 {isSubmitting ? (
                                                                     <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
                                                                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-                                                                        <p className="text-sm text-gray-500">Uploading and submitting...</p>
+                                                                        <p className="text-sm text-gray-500">Submitting...</p>
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="light-upload-wrapper">
-                                                                        <FileUpload
-                                                                            label="Upload your solution (PDF)"
-                                                                            accept=".pdf,.doc,.docx"
-                                                                            onFileSelect={(file) => handleFileUpload(file, assignment.id)}
+                                                                    <div className="flex flex-col sm:flex-row gap-3">
+                                                                        <input
+                                                                            type="url"
+                                                                            placeholder="Google Drive / Docs URL"
+                                                                            className="flex-1 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-700"
+                                                                            id={`url-input-${assignment.id}`}
                                                                         />
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const input = document.getElementById(`url-input-${assignment.id}`) as HTMLInputElement;
+                                                                                if (input && input.value) {
+                                                                                    if (!input.checkValidity()) {
+                                                                                        alert("Please enter a valid absolute URL (e.g., https://...)");
+                                                                                        return;
+                                                                                    }
+                                                                                    handleUrlSubmit(input.value, assignment.id);
+                                                                                } else {
+                                                                                    alert("Please enter a valid URL");
+                                                                                }
+                                                                            }}
+                                                                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-colors whitespace-nowrap"
+                                                                        >
+                                                                            Submit
+                                                                        </button>
                                                                     </div>
                                                                 )}
                                                             </div>

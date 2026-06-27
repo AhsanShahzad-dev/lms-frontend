@@ -36,7 +36,7 @@ export default function CourseAssignmentsContent({ id, courseId }: CourseAssignm
     const [newTitle, setNewTitle] = useState("");
     const [newDesc, setNewDesc] = useState("");
     const [newDueDate, setNewDueDate] = useState("");
-    const [file, setFile] = useState<File | null>(null);
+    const [fileUrlInput, setFileUrlInput] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -70,26 +70,21 @@ export default function CourseAssignmentsContent({ id, courseId }: CourseAssignm
 
         setSubmitting(true);
         try {
-            let fileUrl = "";
-            if (file) {
-                fileUrl = await uploadFile(file);
-            }
-
             await createAssignment({
                 courseId: courseId,
                 teacherId: id,
                 title: newTitle,
                 description: newDesc,
                 dueDate: newDueDate,
-                // Cast to any to include fileUrl as per requirements/implementation
-                ...({ fileUrl } as any)
+                // Pass the URL string directly
+                ...({ fileUrl: fileUrlInput } as any)
             });
 
             // Reset and reload
             setNewTitle("");
             setNewDesc("");
             setNewDueDate("");
-            setFile(null);
+            setFileUrlInput("");
             setIsCreating(false);
             await fetchCourseData();
 
@@ -206,12 +201,13 @@ export default function CourseAssignmentsContent({ id, courseId }: CourseAssignm
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Attachment (PDF)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Attachment (URL)</label>
                                         <input
-                                            type="file"
-                                            accept=".pdf"
-                                            onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                                            className="w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/80 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                                            type="url"
+                                            value={fileUrlInput}
+                                            onChange={(e) => setFileUrlInput(e.target.value)}
+                                            placeholder="https://drive.google.com/..."
+                                            className="w-full p-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/80 transition-shadow"
                                         />
                                     </div>
                                 </div>
@@ -270,8 +266,8 @@ export default function CourseAssignmentsContent({ id, courseId }: CourseAssignm
                                             <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">{assignment.description}</p>
 
                                             {assignment.teacherFileUrl && (
-                                                <a href={getFileDownloadUrl(assignment.teacherFileUrl)} target="_blank" className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-800 hover:underline bg-purple-50 px-3 py-1.5 rounded-lg transition-colors">
-                                                    <Download size={14} /> Download Attachment
+                                                <a href={assignment.teacherFileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-800 hover:underline bg-purple-50 px-3 py-1.5 rounded-lg transition-colors">
+                                                    <FileText size={14} /> View Attachment
                                                 </a>
                                             )}
                                         </div>

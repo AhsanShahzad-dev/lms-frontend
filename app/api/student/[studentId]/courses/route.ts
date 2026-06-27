@@ -23,7 +23,13 @@ export async function GET(
             students: { select: { id: true } },
             announcements: true,
             learningResources: true,
-            assignments: true,
+            assignments: {
+              include: {
+                submissions: {
+                  where: { studentId: studentId }
+                }
+              }
+            },
           }
         }
       }
@@ -34,17 +40,40 @@ export async function GET(
     }
 
     // Map Prisma format to Frontend expected format
-    const courses = studentWithCourses.courses.map((course) => ({
-      id: course.id,
-      courseNo: course.courseNo,
-      courseName: course.courseName,
-      credits: course.credits,
-      teacherId: course.teacherId,
-      studentIds: course.students.map(s => s.id),
-      announcements: course.announcements,
-      learningResources: course.learningResources,
-      assignments: course.assignments,
-    }));
+    const courses = studentWithCourses.courses.map((course) => {
+      const mappedAssignments = course.assignments.map(assignment => {
+        const submission = assignment.submissions[0]; // because we filtered by studentId
+        let status = "pending";
+        if (submission) {
+          status = "submitted";
+        } else if (new Date(assignment.dueDate) < new Date()) {
+          status = "late";
+        }
+
+        return {
+          id: assignment.id,
+          title: assignment.title,
+          description: assignment.description,
+          dueDate: assignment.dueDate,
+          teacherFileUrl: assignment.teacherFileUrl,
+          teacherSubmitted: !!assignment.teacherFileUrl,
+          studentSubmissionFileUrl: submission ? submission.fileUrl : null,
+          status: status
+        };
+      });
+
+      return {
+        id: course.id,
+        courseNo: course.courseNo,
+        courseName: course.courseName,
+        credits: course.credits,
+        teacherId: course.teacherId,
+        studentIds: course.students.map(s => s.id),
+        announcements: course.announcements,
+        learningResources: course.learningResources,
+        assignments: mappedAssignments,
+      };
+    });
 
     return NextResponse.json(courses);
   } catch (error) {

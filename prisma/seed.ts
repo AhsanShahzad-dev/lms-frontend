@@ -24,7 +24,7 @@ async function main() {
     const hashedAdminPassword = await bcrypt.hash("admin123", 10);
 
     // 1. Create Batches
-    const batches = ["Batch-A", "Batch-B", "Batch-C", "Batch-D", "Batch-E"];
+    const batches = ["Batch-A", "Batch-B", "Batch-C", "Batch-D", "Batch-E", "Batch-F", "Batch-G", "Batch-H", "Batch-I", "Batch-J"];
     const createdBatches = [];
     for (const name of batches) {
         const b = await prisma.batch.create({ data: { name } });
@@ -61,9 +61,9 @@ async function main() {
     }
     console.log(`Created ${createdTeachers.length} teachers`);
 
-    // 3. Create Students
+    // 3. Create Students (10 per batch, 100 total)
     const createdStudents = [];
-    for (let i = 1; i <= 50; i++) {
+    for (let i = 1; i <= 100; i++) {
         const batchName = batches[Math.floor((i - 1) / 10)];
         const student = await prisma.student.create({
             data: {
@@ -78,7 +78,7 @@ async function main() {
                 session: "2024-2028",
                 semester: String((i % 4) + 1),
                 campus: "Main",
-                className: `CS-${(i % 4) + 1}${["A", "B", "C"][i % 3]}`,
+                className: `CS-${(i % 4) + 1}A`,
                 nationality: "Pakistani",
                 dob: "2005-01-01",
                 profilePic: "",
@@ -119,48 +119,73 @@ async function main() {
     });
     console.log("Created Admin account");
 
-    // 5. Create Courses & Enroll Students
-    const courseData = [
-        { courseNo: "CS-101", courseName: "Introduction to Computer Science", credits: 4, teacherId: 1 },
-        { courseNo: "CS-102", courseName: "Object Oriented Programming", credits: 4, teacherId: 2 },
-        { courseNo: "CS-201", courseName: "Data Structures", credits: 4, teacherId: 3 },
-        { courseNo: "CS-202", courseName: "Database Systems", credits: 4, teacherId: 4 },
-        { courseNo: "CS-301", courseName: "Software Engineering", credits: 3, teacherId: 5 },
-    ];
+    // 5. Create Courses (3 per teacher to ensure all teachers have 3 courses)
+    const courseData = [];
+    for (let i = 1; i <= 30; i++) {
+        courseData.push({
+            courseNo: `CS-${100 + i}`,
+            courseName: i === 1 ? "Introduction to Computer Science" : `Computer Science Topics ${i}`,
+            credits: i % 2 === 0 ? 3 : 4,
+            teacherId: ((i - 1) % 10) + 1, // Distribute evenly across 10 teachers
+        });
+    }
 
     const createdCourses = [];
     for (const c of courseData) {
-        // Enroll students 1-25 to courses 1, 3, 5 and students 26-50 to courses 2, 4
-        const studentIds = c.teacherId % 2 !== 0 
-            ? Array.from({ length: 25 }, (_, idx) => idx + 1)
-            : Array.from({ length: 25 }, (_, idx) => idx + 26);
-
         const course = await prisma.course.create({
             data: {
                 courseNo: c.courseNo,
                 courseName: c.courseName,
                 credits: c.credits,
                 teacherId: c.teacherId,
-                students: {
-                    connect: studentIds.map(id => ({ id }))
-                }
             }
         });
         createdCourses.push(course);
+    }
+    console.log(`Created ${createdCourses.length} courses`);
 
-        // Add dummy Announcements for the course
+    // 6. Enroll Batches in Courses (Each course gets 3 unique batches)
+    for (const course of createdCourses) {
+        // Deterministically pick 3 batches based on course id to avoid full random
+        const batchIndices = [
+            (course.id * 1) % batches.length,
+            (course.id * 2 + 1) % batches.length,
+            (course.id * 3 + 2) % batches.length,
+        ];
+        const uniqueBatches = Array.from(new Set(batchIndices)).map(idx => batches[idx]);
+        
+        // Find all students in these batches
+        const studentsInBatches = createdStudents.filter(s => uniqueBatches.includes(s.batchName));
+        const studentIdsToConnect = studentsInBatches.map(s => ({ id: s.id }));
+
+        await prisma.course.update({
+            where: { id: course.id },
+            data: {
+                students: {
+                    connect: studentIdsToConnect
+                }
+            }
+        });
+    }
+    console.log("Enrolled students in courses by batch");
+
+    // 7. Add Course Data (Announcements, Resources, Assignments, Attendance, Marks)
+    for (const course of createdCourses) {
+        // Find students enrolled in this course to generate attendance/marks
+        const enrolledCourse = await prisma.course.findUnique({
+            where: { id: course.id },
+            include: { students: { select: { id: true } } }
+        });
+        
+        if (!enrolledCourse || !enrolledCourse.students) continue;
+        const studentIds = enrolledCourse.students.map(s => s.id);
+
+        // Add dummy Announcements
         await prisma.announcement.create({
             data: {
                 courseId: course.id,
                 message: `Welcome to ${course.courseName}! Make sure to read the syllabus.`,
-                timestamp: new Date(Date.now() - 3600000 * 24 * 2) // 2 days ago
-            }
-        });
-        await prisma.announcement.create({
-            data: {
-                courseId: course.id,
-                message: "Reminder: The next lab assignment is uploaded and due next week.",
-                timestamp: new Date(Date.now() - 3600000 * 3) // 3 hours ago
+                timestamp: new Date(Date.now() - 3600000 * 24 * 2) 
             }
         });
 
@@ -168,15 +193,8 @@ async function main() {
         await prisma.learningResource.create({
             data: {
                 courseId: course.id,
-                title: "Lecture 1: Course Overview & Introduction",
+                title: `Lecture 1: ${course.courseName} Overview`,
                 fileUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-            }
-        });
-        await prisma.learningResource.create({
-            data: {
-                courseId: course.id,
-                title: "Lecture 2: Core Concepts Reference PDF",
-                fileUrl: "https://upload.wikimedia.org/wikipedia/commons/e/e4/A_small_PDF.pdf"
             }
         });
 
@@ -186,8 +204,8 @@ async function main() {
                 courseId: course.id,
                 title: "Assignment 1: Getting Started",
                 description: "Complete the setup instructions and answer the theoretical questions in the attachment.",
-                dueDate: new Date(Date.now() + 3600000 * 24 * 4), // 4 days in future
-                teacherFileUrl: "assignment_1_guide.pdf"
+                dueDate: new Date(Date.now() + 3600000 * 24 * 4), 
+                teacherFileUrl: "https://drive.google.com/file/d/1JrquBTSEVKfvmwnaRc8KFffyhwgP30FG/view?usp=sharing"
             }
         });
 
@@ -196,25 +214,24 @@ async function main() {
                 courseId: course.id,
                 title: "Assignment 2: Deep Dive Practice",
                 description: "Implement the custom components outlined in details.",
-                dueDate: new Date(Date.now() - 3600000 * 24 * 1), // 1 day in past
-                teacherFileUrl: "assignment_2_details.pdf"
+                dueDate: new Date(Date.now() - 3600000 * 24 * 1), 
+                teacherFileUrl: "https://drive.google.com/file/d/1JrquBTSEVKfvmwnaRc8KFffyhwgP30FG/view?usp=sharing"
             }
         });
 
         // Add dummy submissions for student 12 (Ahsan Khan) if he is enrolled
         if (studentIds.includes(12)) {
-            // Submitted Assignment 2 (past due date, submitted on time)
             await prisma.submission.create({
                 data: {
                     studentId: 12,
                     assignmentId: assignment2.id,
-                    fileUrl: "submission_ahsan_assignment_2.pdf",
-                    submittedAt: new Date(assignment2.dueDate.getTime() - 3600000 * 2) // 2 hours before due
+                    fileUrl: "https://drive.google.com/file/d/1JrquBTSEVKfvmwnaRc8KFffyhwgP30FG/view?usp=sharing",
+                    submittedAt: new Date(assignment2.dueDate.getTime() - 3600000 * 2) 
                 }
             });
         }
 
-        // Add dummy Attendance records for each student in the course
+        // Add dummy Attendance & Marks records for each student in the course
         for (const sId of studentIds) {
             // Record 5 sessions
             for (let day = 1; day <= 5; day++) {
@@ -241,8 +258,7 @@ async function main() {
             });
         }
     }
-    console.log(`Created ${createdCourses.length} courses, announcements, resources, assignments, attendance records, and marks`);
-
+    
     console.log("🌱 Database seeding complete!");
 }
 

@@ -13,7 +13,6 @@ import LoginHelp from "@/components/LoginHelp";
 
 const loginSchema = z.object({
     id: z.number().min(1, "Student ID is required"),
-    regNo: z.string().min(1, "Registration Number is required"),
     password: z.string().min(1, "Password is required"),
 });
 
@@ -154,27 +153,6 @@ export default function StudentPortalLogin() {
                                 />
                                 {errors.id && (
                                     <p className="mt-1.5 text-xs font-medium text-red-500">{errors.id.message}</p>
-                                )}
-                            </div>
-
-                            {/* RegNo Field */}
-                            <div>
-                                <label htmlFor="regNo" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                                    Registration No
-                                </label>
-                                <input
-                                    id="regNo"
-                                    type="text"
-                                    placeholder="e.g. FA21-BCS-001"
-                                    {...register("regNo")}
-                                    className={`w-full rounded-lg border px-4 py-3 text-sm transition-all outline-none
-                      ${errors.regNo
-                                            ? "border-red-500 focus:ring-2 focus:ring-red-500/20 bg-red-50/50 dark:bg-red-900/10"
-                                            : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 bg-zinc-50 dark:bg-zinc-900"
-                                        } dark:text-white`}
-                                />
-                                {errors.regNo && (
-                                    <p className="mt-1.5 text-xs font-medium text-red-500">{errors.regNo.message}</p>
                                 )}
                             </div>
 

@@ -9,7 +9,7 @@ const ROLE_KEY = "user_role";
 const USER_ID_KEY = "user_id";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-export async function loginStudentAction(credentials: { id: number; regNo: string; password: string }) {
+export async function loginStudentAction(credentials: { id: number; password: string }) {
     try {
         const response = await validateStudent(credentials);
 

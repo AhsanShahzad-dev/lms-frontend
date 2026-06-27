@@ -33,6 +33,7 @@ A comprehensive Learning Management System (LMS) frontend built with Next.js 16,
 - **Language**: TypeScript 5
 - **Styling**: Tailwind CSS 4
 - **State Management**: Zustand
+- **Database ORM**: Prisma (with local SQLite `dev.db`)
 - **Forms**: React Hook Form with Zod validation
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
@@ -44,7 +45,7 @@ A comprehensive Learning Management System (LMS) frontend built with Next.js 16,
 - **Build Tool**: Next.js built-in bundler
 
 ### Authentication & Security
-- **JWT Authentication**: Spring Security integration
+- **JWT Authentication**: Built-in Edge-compatible `jose` library
 - **Role-Based Access Control**: Student, Teacher, Admin roles
 - **Secure API Communication**: Bearer token authentication
 - **CORS Configuration**: Proper cross-origin setup
@@ -96,7 +97,6 @@ lms-frontend/
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn package manager
-- Access to the backend API (see API configuration below)
 
 ### Installation
 
@@ -113,16 +113,19 @@ lms-frontend/
    yarn install
    ```
 
-3. **Environment Configuration**
+3. **Database Setup**
+   The project uses Prisma with a local SQLite database. Push the schema and seed the database with mock users:
+   ```bash
+   npx prisma db push
+   npx tsx prisma/seed.ts
+   ```
+
+4. **Environment Configuration**
    
    Create a `.env.local` file in the root directory:
    ```env
-   NEXT_PUBLIC_API_URL=https://your-backend-api-url/
-   ```
-   
-   For development with local backend:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:8080
+   NEXT_PUBLIC_API_URL=http://localhost:3000/api
+   JWT_SECRET=your_super_secret_jwt_key
    ```
 
 4. **Run the development server**
@@ -138,12 +141,11 @@ lms-frontend/
 ## 🔧 Configuration
 
 ### Environment Variables
-- `NEXT_PUBLIC_API_URL`: Base URL for the backend API
-  - Development: `http://localhost:8080`
-  - Production: `https://universityportalbackend-production.up.railway.app/`
+- `NEXT_PUBLIC_API_URL`: Base URL for the internal API route (`http://localhost:3000/api`)
+- `JWT_SECRET`: Secret key used for signing JSON Web Tokens
 
 ### API Configuration
-The application uses a proxy API route to handle CORS and authentication. All API requests are routed through `/api/proxy` in development and directly to the backend in production.
+The application is now a full-stack Next.js app. The backend logic is encapsulated within Next.js API Routes (`app/api/...`), removing the need for a separate Java Spring Boot backend proxy.
 
 ### Image Domains
 The Next.js configuration allows images from:

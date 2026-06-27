@@ -374,7 +374,6 @@ export const getFileDownloadUrl = (path: string) => {
 
 export interface StudentLoginCredentials {
     id: number;
-    regNo: string;
     password: string;
 }
 
